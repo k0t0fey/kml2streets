@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <title>Выдели область и получи список улиц</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"/>
+    <link rel="stylesheet" href="css/index.css"/>
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script type="module" src="js/index.js"></script>
+<!--    <script type="module" src="js/App.js"></script>-->
+
+</head>
+<body>
+
+<div id="map">
+    <div class="custom-controls">
+        <div>
+            <label for="kml-file">Выберите *.kml файл</label>
+            <input id="kml-file" name="kml-file" type="file" accept=".kml" />
+        </div>
+
+        <div class="pt-10">
+            <select id="kml-areas" disabled="disabled">
+                <option disabled="disabled" selected>выберите слой...</option>
+            </select>
+            <button id="get-streets" disabled="disabled">Получить список улиц</button>
+        </div>
+    </div>
+</div>
+
+<div id="loading-overlay" class="">
+    <div class="lds-ripple"><div></div><div></div></div>
+</div>
+
+</body>
+</html>
