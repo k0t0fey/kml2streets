@@ -17,6 +17,11 @@ html, body {
     z-index: 999;
 }
 
+.file-selector {
+    text-shadow: 1px 1px 1px white;
+    font-weight: bold;
+}
+
 .pt-10 {
     padding-top: 10px;
 }

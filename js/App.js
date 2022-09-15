@@ -73,7 +73,6 @@ export default class App {
       // https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
       // ищем только `type`:`way` и чтобы в `tags` присутствовал ключ `name` и не было объектов с ключами `brand`, `leisure`, `tourism` и др
       const link = `${this.osmApiUri}?data=${encodeURIComponent('[out:json];(way(poly:"'+crdStr+'")["name"]["surface"][!"brand"][!"leisure"][!"tourism"][!"motor_vehicle"][!"tunnel"];<;);out meta;')}`;
-      console.info(this.polygons[selectedArea]);
 
       try {
         const response = await fetch(link);
@@ -85,8 +84,6 @@ export default class App {
           .compact()
           .value()
           .sort();
-        console.info(nodes);
-        console.info(streets);
         this.downloadFile(streets.join('\r\n'), `Streets ${selectedArea}.txt`);
       } catch (err) {
         alert('Что-то пошло не так. Ошибка: ' + err.message || err.toString());
