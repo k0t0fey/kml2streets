@@ -12,6 +12,7 @@ export default class App {
     this.fileElm = document.getElementById('kml-file');
     this.selectorElm = document.getElementById('kml-areas');
     this.getStreetsBtn = document.getElementById('get-streets');
+    this.getAllStreetsBtn = document.getElementById('get-all-streets');
     this.loadingOverlay = document.getElementById('loading-overlay');
 
     this.kmlDataRaw = '';
@@ -31,6 +32,7 @@ export default class App {
     this.setupFileListener();
     this.setupAreaSelector();
     this.setupExportButton();
+    this.setupExportAllButton();
   }
 
   clearMap() {
@@ -64,15 +66,23 @@ export default class App {
     });
   }
 
+  // https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
+  genExportLink(area) {
+    const crdStr = _.map(this.polygons[area].crdLatLon, crd => crd.join(' ')).join(' ');
+    // ищем только `type`:`way` и чтобы в `tags` присутствовал ключ `name` и не было объектов с ключами `brand`, `leisure`, `tourism` и др
+    return `${this.osmApiUri}?data=${encodeURIComponent('[out:json];(way(poly:"'+crdStr+'")["name"]["surface"][!"brand"][!"leisure"][!"tourism"][!"motor_vehicle"][!"tunnel"];<;);out meta;')}`;
+  }
+
   setupExportButton() {
     this.getStreetsBtn.addEventListener('click', async () => {
+      if(this.selectorElm.selectedIndex === 0) {
+        return;
+      }
+
       this.loadingOverlay.classList.toggle('is-active');
 
       const selectedArea = this.selectorElm.selectedOptions[0].innerText;
-      const crdStr = _.map(this.polygons[selectedArea].crdLatLon, crd => crd.join(' ')).join(' ');
-      // https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide
-      // ищем только `type`:`way` и чтобы в `tags` присутствовал ключ `name` и не было объектов с ключами `brand`, `leisure`, `tourism` и др
-      const link = `${this.osmApiUri}?data=${encodeURIComponent('[out:json];(way(poly:"'+crdStr+'")["name"]["surface"][!"brand"][!"leisure"][!"tourism"][!"motor_vehicle"][!"tunnel"];<;);out meta;')}`;
+      const link = this.genExportLink(selectedArea);
 
       try {
         const response = await fetch(link);
@@ -89,6 +99,36 @@ export default class App {
         alert('Что-то пошло не так. Ошибка: ' + err.message || err.toString());
       }
 
+      this.loadingOverlay.classList.toggle('is-active');
+    });
+  }
+
+  setupExportAllButton() {
+    this.getAllStreetsBtn.addEventListener('click', async () => {
+      this.loadingOverlay.classList.toggle('is-active');
+      let allStreets = [];
+
+      for(let i = 1; i < this.selectorElm.options.length; i++) {
+        this.selectorElm.selectedIndex = i;
+        const selectedArea = this.selectorElm.options[i].innerText;
+        const link = this.genExportLink(selectedArea);
+
+        try {
+          const response = await fetch(link);
+          const nodes = await response.json();
+          const streets = _(nodes.elements)
+            .filter(elm => elm.type !== 'relation')
+            .map('tags.name')
+            .compact()
+            .value();
+          allStreets = streets.concat(allStreets);
+        } catch (err) {
+          alert('Что-то пошло не так. Ошибка: ' + err.message || err.toString());
+        }
+      }
+
+      allStreets = _.uniq(allStreets).sort();
+      this.downloadFile(allStreets.join('\r\n'), `all streets.txt`);
       this.loadingOverlay.classList.toggle('is-active');
     });
   }
@@ -141,6 +181,7 @@ export default class App {
       this.selectorElm.appendChild(option);
       this.selectorElm.removeAttribute('disabled');
       this.getStreetsBtn.removeAttribute('disabled');
+      this.getAllStreetsBtn.removeAttribute('disabled');
     });
   }
 
